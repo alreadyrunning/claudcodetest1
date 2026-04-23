@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Claude Learning Path — Trading Program</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      padding: 30px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #7c6af7;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #888;
+      font-size: 1rem;
+    }
+
+    .overall-progress {
+      background: #1a1d27;
+      border-radius: 12px;
+      padding: 20px 28px;
+      margin-bottom: 36px;
+      border: 1px solid #2a2d3e;
+    }
+
+    .overall-progress h2 {
+      font-size: 1rem;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar-wrap {
+      background: #2a2d3e;
+      border-radius: 99px;
+      height: 14px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7c6af7, #4fc3f7);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: #aaa;
+      text-align: right;
+    }
+
+    .stage {
+      background: #1a1d27;
+      border: 1px solid #2a2d3e;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .stage.complete {
+      border-color: #4caf50;
+    }
+
+    .stage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .stage-header:hover {
+      background: #1f2235;
+    }
+
+    .stage-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stage-number {
+      background: #7c6af7;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stage.complete .stage-number {
+      background: #4caf50;
+    }
+
+    .stage-title h2 {
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .stage-title p {
+      font-size: 0.82rem;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .stage-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .stage-badge {
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: #2a2d3e;
+      color: #aaa;
+      white-space: nowrap;
+    }
+
+    .stage.complete .stage-badge {
+      background: #1b3a1c;
+      color: #4caf50;
+    }
+
+    .chevron {
+      color: #555;
+      font-size: 1.2rem;
+      transition: transform 0.3s;
+    }
+
+    .stage.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .stage-body {
+      display: none;
+      padding: 0 24px 24px;
+      border-top: 1px solid #2a2d3e;
+    }
+
+    .stage.open .stage-body {
+      display: block;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0 24px;
+    }
+
+    @media (max-width: 600px) {
+      .info-grid { grid-template-columns: 1fr; }
+    }
+
+    .info-card {
+      background: #12141e;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid #2a2d3e;
+    }
+
+    .info-card h4 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7c6af7;
+      margin-bottom: 8px;
+    }
+
+    .info-card p {
+      font-size: 0.88rem;
+      color: #bbb;
+      line-height: 1.6;
+    }
+
+    .steps-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 14px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      background: #12141e;
+      border: 1px solid #2a2d3e;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .step:hover {
+      background: #191c2a;
+    }
+
+    .step.done {
+      background: #0e1f0f;
+      border-color: #2e5e30;
+    }
+
+    .step input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #4caf50;
+      flex-shrink: 0;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .step-content h3 {
+      font-size: 0.95rem;
+      color: #e0e0e0;
+      margin-bottom: 4px;
+    }
+
+    .step.done .step-content h3 {
+      color: #888;
+      text-decoration: line-through;
+    }
+
+    .step-content p {
+      font-size: 0.83rem;
+      color: #777;
+      line-height: 1.55;
+    }
+
+    .step.done .step-content p {
+      color: #555;
+    }
+
+    .stage-progress-wrap {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stage-progress-bar-wrap {
+      flex: 1;
+      background: #2a2d3e;
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .stage-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7c6af7, #4fc3f7);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .stage.complete .stage-progress-bar-fill {
+      background: #4caf50;
+    }
+
+    .stage-progress-label {
+      font-size: 0.8rem;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .claude-tip {
+      margin-top: 20px;
+      background: #141826;
+      border-left: 3px solid #7c6af7;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+    }
+
+    .claude-tip h4 {
+      font-size: 0.78rem;
+      color: #7c6af7;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .claude-tip p {
+      font-size: 0.85rem;
+      color: #999;
+      line-height: 1.55;
+    }
+
+    .circles-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .circle-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .circle-item:hover .circle-svg circle.track {
+      stroke: #3a3d50;
+    }
+
+    .circle-svg {
+      transform: rotate(-90deg);
+    }
+
+    .circle-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .circle-wrap svg {
+      transform: rotate(-90deg);
+    }
+
+    .circle-inner {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .circle-pct {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .circle-item.overall .circle-pct {
+      font-size: 1.3rem;
+    }
+
+    .circle-steps {
+      font-size: 0.62rem;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .circle-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-align: center;
+      max-width: 80px;
+      line-height: 1.3;
+    }
+
+    .circle-item.overall .circle-label {
+      font-size: 0.82rem;
+      color: #aaa;
+      font-weight: 600;
+      max-width: 100px;
+    }
+
+    .circle-divider {
+      width: 1px;
+      height: 60px;
+      background: #2a2d3e;
+      margin-bottom: 46px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: #444;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Claude Learning Path</h1>
+  <p>From beginner to building an intelligent trading program — one stage at a time</p>
+</header>
+
+<div class="circles-row" id="circles-row"></div>
+
+<div id="stages"></div>
+
+<footer>Built with Claude Code &mdash; track your progress as you go</footer>
+
+<script>
+  const stages = [
+    {
+      id: "stage1",
+      number: 1,
+      title: "Learn the Basics with Claude",
+      subtitle: "Python + Claude fundamentals",
+      objective: "Get comfortable writing and running Python scripts with Claude's help. Learn the rhythm of working with Claude — describe what you want, review the output, test it, and refine.",
+      outcome: "You'll be able to write simple Python programs, run them on your machine, and confidently use Claude as your coding partner.",
+      claudeTip: "For this stage, try prompts like: \"Write a Python script that does X\" or \"Explain this code to me line by line\" or \"This script isn't working, can you fix it?\"",
+      steps: [
+        { title: "Write your first Python script", desc: "Ask Claude to write a Hello World script. Save it as hello.py and run it from the terminal using: python hello.py" },
+        { title: "Run Python from the terminal", desc: "Open a terminal in VS Code (View > Terminal), navigate to your project folder, and run your script. Confirm you see the output." },
+        { title: "Ask Claude to explain code", desc: "Paste any Python snippet into Claude and ask it to explain each line. Practice understanding what the code does before running it." },
+        { title: "Write a script that does basic maths", desc: "Ask Claude to write a script that adds, subtracts, multiplies and divides two numbers and prints the results." },
+        { title: "Ask Claude to fix a broken script", desc: "Intentionally introduce an error into your script (e.g. delete a colon or bracket), then ask Claude to find and fix the bug." }
+      ]
+    },
+    {
+      id: "stage2",
+      number: 2,
+      title: "Work with Data",
+      subtitle: "Files, CSVs, and pandas",
+      objective: "Learn how to read, manipulate, and analyse data using Python. Stock market analysis is fundamentally a data problem — this stage builds that foundation.",
+      outcome: "You'll be able to load a spreadsheet of stock prices into Python, calculate key statistics, and display results in a readable format.",
+      claudeTip: "Try prompts like: \"Install pandas and show me how to read a CSV file\" or \"Calculate the average, highest, and lowest value in this column\" or \"Format this output so it's easy to read\"",
+      steps: [
+        { title: "Create a sample CSV of stock prices", desc: "Ask Claude to create a CSV file with sample data: columns for Date, Open, High, Low, Close, Volume. Use fictional or historical prices for one stock." },
+        { title: "Install the pandas library", desc: "Ask Claude how to install pandas. Run: pip install pandas in your terminal. Pandas is the standard Python library for working with data." },
+        { title: "Read the CSV file with Python", desc: "Ask Claude to write a script that loads your CSV file using pandas and prints the first 10 rows to the terminal." },
+        { title: "Calculate key statistics", desc: "Ask Claude to add code that calculates and prints the average closing price, the highest price, and the lowest price from your data." },
+        { title: "Display results in a clean format", desc: "Ask Claude to format the output so it looks like a proper summary report — with labels, rounded numbers, and clear layout." }
+      ]
+    },
+    {
+      id: "stage3",
+      number: 3,
+      title: "Fetch Live Market Data",
+      subtitle: "APIs and real stock prices",
+      objective: "Connect your Python program to the internet to pull real, live stock market data. This replaces your sample CSV with actual market information.",
+      outcome: "You'll have a script that can download real stock prices for any company and display them — the data engine behind your trading program.",
+      claudeTip: "Try prompts like: \"Install yfinance and show me how to get Apple's stock price for the last 30 days\" or \"Save this data to a CSV file\" or \"Compare the performance of two stocks side by side\"",
+      steps: [
+        { title: "Install the yfinance library", desc: "Ask Claude to help you install yfinance — a free library that fetches real stock data from Yahoo Finance. Run: pip install yfinance" },
+        { title: "Fetch stock prices for one company", desc: "Ask Claude to write a script that downloads the last 30 days of closing prices for a stock of your choice (e.g. Apple = AAPL, Microsoft = MSFT)." },
+        { title: "Display the data clearly", desc: "Ask Claude to format the output as a neat table showing the date and closing price for each of the last 30 days." },
+        { title: "Save the data to a CSV file", desc: "Ask Claude to extend the script to save the downloaded data to a CSV file so you can keep a record and work with it offline." },
+        { title: "Compare two stocks", desc: "Ask Claude to modify the script to fetch data for two stocks and show their closing prices side by side so you can compare performance." }
+      ]
+    },
+    {
+      id: "stage4",
+      number: 4,
+      title: "Simple Analysis and Signals",
+      subtitle: "Moving averages and buy/sell logic",
+      objective: "Build your first trading logic. Use mathematical indicators to identify trends in stock prices and generate simple buy or sell signals based on rules.",
+      outcome: "You'll have a working algorithm that analyses historical price data and tells you when a stock's trend suggests buying or selling — the core logic of a trading system.",
+      claudeTip: "Try prompts like: \"Add a 20-day and 50-day moving average to my stock data\" or \"Generate a buy signal when the short average crosses above the long average\" or \"Test this strategy on the last 6 months of data\"",
+      steps: [
+        { title: "Calculate a simple moving average (SMA)", desc: "Ask Claude to add a 20-day Simple Moving Average to your stock data. An SMA smooths out price fluctuations to show the overall trend." },
+        { title: "Add a second moving average", desc: "Ask Claude to add a 50-day SMA alongside the 20-day SMA. Having two timeframes lets you spot when a short-term trend crosses a longer-term one." },
+        { title: "Generate a buy signal", desc: "Ask Claude to add logic that prints a BUY signal on days when the 20-day SMA crosses above the 50-day SMA — this is a classic trend-following entry signal." },
+        { title: "Generate a sell signal", desc: "Ask Claude to add a SELL signal for when the 20-day SMA crosses below the 50-day SMA — indicating the short-term trend is weakening." },
+        { title: "Backtest on historical data", desc: "Ask Claude to run this strategy over 12 months of historical data and summarise how many buy/sell signals were generated and what the outcome of each was." }
+      ]
+    },
+    {
+      id: "stage5",
+      number: 5,
+      title: "Add the Intelligence Layer",
+      subtitle: "Claude API for market reasoning",
+      objective: "Go beyond fixed rules by bringing Claude's reasoning into your trading program. Feed market data to Claude and ask it to interpret trends, spot patterns, and suggest decisions in plain English.",
+      outcome: "Your program will use AI reasoning on top of the data — Claude will read the numbers and explain what they mean, making your analysis smarter and easier to understand.",
+      claudeTip: "Try prompts like: \"Set up the Anthropic Python SDK\" or \"Send my stock data to Claude and ask it to describe the current trend\" or \"Ask Claude whether the signals suggest a good time to invest this month\"",
+      steps: [
+        { title: "Set up the Claude API", desc: "Ask Claude to help you install the Anthropic Python SDK (pip install anthropic) and set up your API key so your program can call Claude programmatically." },
+        { title: "Send stock data to Claude for analysis", desc: "Ask Claude to write a script that takes your last 30 days of stock data, formats it as text, and sends it to the Claude API asking for a trend summary." },
+        { title: "Ask Claude to identify patterns", desc: "Extend the prompt sent to Claude to ask it to identify any notable patterns — such as consistent growth, high volatility, or a recent reversal." },
+        { title: "Get a plain-English investment view", desc: "Ask Claude to prompt the API with a question like: Based on this data and the buy/sell signals, is this stock worth a short-term investment this month? Why or why not?" },
+        { title: "Combine AI analysis with your signals", desc: "Ask Claude to merge the signal output from Stage 4 with the Claude API commentary into a single report that shows both the technical signal and the AI reasoning." }
+      ]
+    },
+    {
+      id: "stage6",
+      number: 6,
+      title: "The Full Trading Program",
+      subtitle: "Portfolio tracker, dashboard, monthly review",
+      objective: "Bring everything together into a complete, working trading program. Track multiple stocks, run monthly analysis, get AI-powered recommendations, and review your portfolio performance over time.",
+      outcome: "A fully functional intelligent trading assistant that helps you make informed short-term monthly investment decisions — the goal you started with.",
+      claudeTip: "Try prompts like: \"Build a portfolio tracker that monitors 5 stocks\" or \"Create a monthly report that summarises each stock's performance and signals\" or \"Add a simple HTML dashboard so I can view the results in a browser\"",
+      steps: [
+        { title: "Design the program structure", desc: "Ask Claude to plan the structure of your full program — what files it will have, what each one does, and how they connect. Review the plan before any code is written." },
+        { title: "Build a multi-stock portfolio tracker", desc: "Ask Claude to extend your scripts to track a list of 5 stocks simultaneously — fetching data, calculating signals, and storing results for each one." },
+        { title: "Generate a monthly analysis report", desc: "Ask Claude to write a script that runs at the start of each month, analyses all your stocks, and produces a written report summarising performance and signals." },
+        { title: "Add Claude AI recommendations", desc: "Ask Claude to integrate the Claude API so the monthly report includes an AI-generated investment recommendation for each stock with reasoning." },
+        { title: "Create an HTML dashboard", desc: "Ask Claude to build a simple HTML page (like this one) that displays your portfolio, signals, and AI recommendations in a clean, readable format you can open in a browser." }
+      ]
+    }
+  ];
+
+  let _state = {};
+
+  async function loadState() {
+    try {
+      const res = await fetch('/load');
+      _state = await res.json();
+    } catch {
+      // fallback to localStorage if not running via server
+      try { _state = JSON.parse(localStorage.getItem('claudePathState') || '{}'); } catch { _state = {}; }
+    }
+    return _state;
+  }
+
+  async function saveState(state) {
+    _state = state;
+    try {
+      await fetch('/save', { method: 'POST', body: JSON.stringify(state), headers: { 'Content-Type': 'application/json' } });
+    } catch {
+      localStorage.setItem('claudePathState', JSON.stringify(state));
+    }
+  }
+
+  function countAll() {
+    return stages.reduce((sum, s) => sum + s.steps.length, 0);
+  }
+
+  function countDone(state) {
+    let done = 0;
+    stages.forEach(s => {
+      s.steps.forEach((_, i) => { if (state[s.id + '_' + i]) done++; });
+    });
+    return done;
+  }
+
+  function stageDone(state, stage) {
+    return stage.steps.every((_, i) => state[stage.id + '_' + i]);
+  }
+
+  function stageDoneCount(state, stage) {
+    return stage.steps.filter((_, i) => state[stage.id + '_' + i]).length;
+  }
+
+  const stageColors = [
+    '#a78bfa', // Stage 1 — violet
+    '#38bdf8', // Stage 2 — sky blue
+    '#fb923c', // Stage 3 — orange
+    '#f472b6', // Stage 4 — pink
+    '#34d399', // Stage 5 — emerald
+    '#facc15', // Stage 6 — yellow
+  ];
+
+  function makeCircle(pct, size, strokeWidth, color, complete) {
+    const r = (size - strokeWidth) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (pct / 100) * circ;
+    const fillColor = complete ? '#4caf50' : color;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#2a2d3e" stroke-width="${strokeWidth}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${fillColor}" stroke-width="${strokeWidth}"
+        stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+        stroke-linecap="round" style="transition: stroke-dashoffset 0.5s ease; filter: drop-shadow(0 0 6px ${fillColor}88);"/>
+    </svg>`;
+  }
+
+  function updateCircles(state) {
+    const row = document.getElementById('circles-row');
+    row.innerHTML = '';
+
+    stages.forEach((stage, si) => {
+      const doneCount = stageDoneCount(state, stage);
+      const total = stage.steps.length;
+      const pct = Math.round((doneCount / total) * 100);
+      const complete = stageDone(state, stage);
+      const color = stageColors[si];
+
+      const item = document.createElement('div');
+      item.className = 'circle-item';
+      item.title = 'Jump to ' + stage.title;
+      item.innerHTML = `
+        <div class="circle-wrap" style="width:80px;height:80px;">
+          ${makeCircle(pct, 80, 7, color, complete)}
+          <div class="circle-inner">
+            <div class="circle-pct" style="color:${complete ? '#4caf50' : color}">${pct}%</div>
+            <div class="circle-steps">${doneCount}/${total}</div>
+          </div>
+        </div>
+        <div class="circle-label" style="color:${complete ? '#4caf50' : color}">Stage ${stage.number}</div>
+      `;
+      item.addEventListener('click', () => {
+        const stageEls = document.querySelectorAll('.stage');
+        if (stageEls[si]) {
+          stageEls[si].classList.add('open');
+          stageEls[si].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+      row.appendChild(item);
+    });
+
+    // divider
+    const div = document.createElement('div');
+    div.className = 'circle-divider';
+    row.appendChild(div);
+
+    // overall circle
+    const total = countAll();
+    const done = countDone(state);
+    const overallPct = total === 0 ? 0 : Math.round((done / total) * 100);
+    const overallComplete = done === total;
+    const overallColor = '#c084fc';
+
+    const overall = document.createElement('div');
+    overall.className = 'circle-item overall';
+    overall.innerHTML = `
+      <div class="circle-wrap" style="width:100px;height:100px;">
+        ${makeCircle(overallPct, 100, 8, overallColor, overallComplete)}
+        <div class="circle-inner">
+          <div class="circle-pct" style="color:${overallComplete ? '#4caf50' : overallColor}">${overallPct}%</div>
+          <div class="circle-steps">${done}/${total}</div>
+        </div>
+      </div>
+      <div class="circle-label" style="color:${overallComplete ? '#4caf50' : overallColor}">Overall</div>
+    `;
+    row.appendChild(overall);
+  }
+
+  async function render() {
+    const state = await loadState();
+    const container = document.getElementById('stages');
+    container.innerHTML = '';
+
+    stages.forEach((stage, si) => {
+      const done = stageDone(state, stage);
+      const doneCount = stageDoneCount(state, stage);
+      const total = stage.steps.length;
+      const pct = Math.round((doneCount / total) * 100);
+
+      const el = document.createElement('div');
+      el.className = 'stage' + (done ? ' complete' : '') + (si === 0 ? ' open' : '');
+      el.innerHTML = `
+        <div class="stage-header">
+          <div class="stage-left">
+            <div class="stage-number">${done ? '✓' : stage.number}</div>
+            <div class="stage-title">
+              <h2>${stage.title}</h2>
+              <p>${stage.subtitle}</p>
+            </div>
+          </div>
+          <div class="stage-right">
+            <span class="stage-badge">${done ? 'Complete' : doneCount + '/' + total + ' steps'}</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="stage-body">
+          <div class="info-grid">
+            <div class="info-card">
+              <h4>Objective</h4>
+              <p>${stage.objective}</p>
+            </div>
+            <div class="info-card">
+              <h4>What You'll Gain</h4>
+              <p>${stage.outcome}</p>
+            </div>
+          </div>
+
+          <div class="steps-title">Step-by-Step Guide</div>
+
+          ${stage.steps.map((step, i) => {
+            const checked = !!state[stage.id + '_' + i];
+            return `
+              <div class="step${checked ? ' done' : ''}" data-stage="${stage.id}" data-step="${i}">
+                <input type="checkbox" ${checked ? 'checked' : ''} />
+                <div class="step-content">
+                  <h3>Step ${i + 1}: ${step.title}</h3>
+                  <p>${step.desc}</p>
+                </div>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="stage-progress-wrap">
+            <div class="stage-progress-bar-wrap">
+              <div class="stage-progress-bar-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="stage-progress-label">${pct}%</div>
+          </div>
+
+          <div class="claude-tip">
+            <h4>Claude Prompting Tips for This Stage</h4>
+            <p>${stage.claudeTip}</p>
+          </div>
+        </div>
+      `;
+
+      // Toggle open/close
+      el.querySelector('.stage-header').addEventListener('click', () => {
+        el.classList.toggle('open');
+      });
+
+      // Checkbox clicks
+      el.querySelectorAll('.step').forEach(stepEl => {
+        stepEl.addEventListener('click', async (e) => {
+          const stageId = stepEl.dataset.stage;
+          const stepIdx = stepEl.dataset.step;
+          const key = stageId + '_' + stepIdx;
+          const s = { ..._state };
+          s[key] = !s[key];
+          await saveState(s);
+          render();
+        });
+      });
+
+      container.appendChild(el);
+    });
+
+    updateCircles(state);
+  }
+
+  render();
+</script>
+</body>
+</html>

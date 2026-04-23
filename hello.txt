@@ -1,0 +1,2 @@
+Hello World!
+This is my first file created with Claude Code and tracked with Git.
